@@ -32,8 +32,8 @@ func main() {
 
 	certFile := flag.String("kek-file", "", "")
 	keyID := flag.String("kek", "", "")
-	moduleDigestStr := flag.digest("digest", "", "")
-	out := flag.digest("out", "", "")
+	moduleDigestStr := flag.String("digest", "", "")
+	out := flag.String("out", "", "")
 	
 	flag.Parse()
 	
@@ -76,7 +76,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer newAttempt.Close()
+	defer outFile.Close()
 
 	// requires CMS fork which will not calculate the data digest, 
 	// but rather just use this as digest for the signature.
@@ -85,7 +85,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	err = signedData.Sign([]*x509.Certificate{kekCert}, sKEK)
+	err = signedData.Sign([]*x509.Certificate{cert}, signer)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -100,7 +100,7 @@ func main() {
 		EContent: asn1.RawValue{
 			Class:      asn1.ClassContextSpecific,
 			Tag:        0,
-			Bytes:      octets,
+			Bytes:      idc,
 			IsCompound: true,
 		},
 	}
@@ -181,7 +181,7 @@ func (g *GoogleKMS) getAsymmetricPublicKey() error {
 /*---------------------------------------
 		Indirect Data Context
 ----------------------------------------*/
-func IDC(moduleDigest []byte) ([]byte){
+func IDC(moduleDigest []byte) ([]byte, error){
 	
 	obsolete := []byte {
 		0x00, 0x3c, 0x00, 0x3c, 0x00, 0x3c, 0x00, 0x4f, 0x00, 0x62,
@@ -236,7 +236,7 @@ func IDC(moduleDigest []byte) ([]byte){
 }
 
 /*---------------------------------------------------------------------------------------------------------------------
-										Indirect Data Definition Context
+		Indirect Data Definition Context
 		https://github.com/msekletar/sbsigntool/blob/a6043253a4f8621b8eac0fd099e26a8a992cb13a/src/idc.c#L115
 ----------------------------------------------------------------------------------------------------------------------*/
 type IndirectDataContext struct {
