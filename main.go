@@ -85,7 +85,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	err = signedData.Sign([]*x509.Certificate{cert}, signer)
+	err = signedData.Sign([]*x509.Certificate{cert}, signer, modDigest)
 	if err != nil {
 		log.Fatal(err)
 	}
